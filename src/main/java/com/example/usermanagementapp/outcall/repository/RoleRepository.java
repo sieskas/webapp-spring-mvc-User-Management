@@ -8,8 +8,7 @@ import org.springframework.stereotype.Repository;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 
 @Repository
@@ -48,12 +47,12 @@ public class RoleRepository {
     public Role save(Role role) {
         if (role.getId() == null) {
             // Insert
-            String sql = "INSERT INTO role (name) VALUES (?); SELECT SCOPE_IDENTITY();";
+            String sql = "INSERT INTO roles (name) VALUES (?); SELECT SCOPE_IDENTITY();";
             Long generatedId = jdbcTemplate.queryForObject(sql, Long.class, role.getName());
             role.setId(generatedId);
         } else {
             // Update
-            String sql = "UPDATE role SET name = ? WHERE id = ?";
+            String sql = "UPDATE roles SET name = ? WHERE id = ?";
             jdbcTemplate.update(sql, role.getName());
         }
         return role;
@@ -79,5 +78,20 @@ public class RoleRepository {
     public void removeRoleFromUser(Long userId, Long roleId) {
         String sql = "DELETE FROM user_roles WHERE user_id = ? AND role_id = ?";
         jdbcTemplate.update(sql, userId, roleId);
+    }
+
+    public Set<Role> findRolesByIds(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return new HashSet<>();
+        }
+        String sql = "SELECT * FROM roles WHERE id IN (" +
+                String.join(",", Collections.nCopies(ids.size(), "?")) + ")";
+        List<Role> roles = jdbcTemplate.query(sql, ids.toArray(), roleRowMapper);
+        return new HashSet<>(roles);
+    }
+
+    public void deleteRoleAssociations(Long id) {
+        String sql = "DELETE FROM user_roles WHERE role_id = ?";
+        jdbcTemplate.update(sql, id);
     }
 }

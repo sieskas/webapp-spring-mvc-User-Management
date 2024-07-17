@@ -1,7 +1,9 @@
 package com.example.usermanagementapp.model;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class User {
     private Long id;
@@ -49,15 +51,25 @@ public class User {
         return roles;
     }
 
-    public void setRoles(Set<Role> roles) {
-        this.roles = roles;
-    }
-
     public void addRole(Role role) {
         this.roles.add(role);
     }
 
     public void removeRole(Role role) {
         this.roles.remove(role);
+    }
+
+    public void setRoles(Set<Role> roles) {
+        this.roles = roles;
+    }
+
+    public void setRoles(List<Long> roleIds) {
+        this.roles = roleIds.stream()
+                .map(id -> {
+                    Role role = new Role();
+                    role.setId(id);
+                    return role;
+                })
+                .collect(Collectors.toSet());
     }
 }

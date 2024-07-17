@@ -8,6 +8,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 @Service
 public class UserService {
 
@@ -18,20 +23,75 @@ public class UserService {
     private RoleRepository roleRepository;
 
     @Autowired
+    private RoleService roleService;
+
+    @Autowired
     private PasswordEncoder passwordEncoder;
 
     public User registerNewUser(User user) {
-        // Encoder le mot de passe
+        //add validation password size, force etc...
         user.setPassword(passwordEncoder.encode(user.getPassword()));
 
-        // Sauvegarder l'utilisateur
         User savedUser = userRepository.save(user);
 
-        // Ajouter le rôle par défaut (ROLE_USER)
         Role defaultRole = roleRepository.findByName("ROLE_USER")
                 .orElseThrow(() -> new RuntimeException("Default role not found"));
         userRepository.addRoleToUser(savedUser.getId(), defaultRole.getId());
 
         return savedUser;
+    }
+
+    public List<User> getAllUsers() {
+        return userRepository.findAll();
+    }
+
+    public List<User> getAllUsersWithRoles() {
+        List<User> users = userRepository.findAll();
+        for (User user : users) {
+            user.setRoles(userRepository.findRolesForUser(user.getId()));
+        }
+        return users;
+    }
+
+    public User getUserById(Long id) {
+        return userRepository.findById(id).orElse(null);
+    }
+
+    public User saveUser(User user) {
+        if (user.getRoles() == null || user.getRoles().isEmpty()) {
+            throw new IllegalArgumentException("User must have at least one role");
+        }
+
+        if (user.getId() == null || (user.getPassword() != null && !user.getPassword().isEmpty())) {
+            user.setPassword(passwordEncoder.encode(user.getPassword()));
+        } else {
+            User existingUser = userRepository.findById(user.getId())
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+            user.setPassword(existingUser.getPassword());
+        }
+
+        User savedUser = userRepository.save(user);
+
+        userRepository.updateUserRoles(savedUser.getId(), user.getRoles());
+
+        return savedUser;
+    }
+
+    public void deleteUser(Long id) {
+        userRepository.deleteUserRoles(id);
+        userRepository.delete(id);
+    }
+
+    public void updateUserRoles(Long userId, Set<Role> newRoles) {
+        Set<Role> currentRoles = userRepository.findRolesForUser(userId);
+        Set<Role> rolesToAdd = newRoles.stream()
+                .filter(role -> !currentRoles.contains(role))
+                .collect(Collectors.toSet());
+        Set<Role> rolesToRemove = currentRoles.stream()
+                .filter(role -> !newRoles.contains(role))
+                .collect(Collectors.toSet());
+
+        rolesToRemove.forEach(role -> userRepository.removeRoleFromUser(userId, role.getId()));
+        rolesToAdd.forEach(role -> userRepository.addRoleToUser(userId, role.getId()));
     }
 }
