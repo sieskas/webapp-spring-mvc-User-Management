@@ -1,4 +1,4 @@
-package com.example.usermanagementapp.api.v1.controller;
+package com.example.usermanagementapp.web.controller;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;

@@ -19,6 +19,7 @@
             <sec:authorize access="isAuthenticated()">
                 <a href="<c:url value='/users'/>" class="mx-2 hover:underline">Users</a>
                 <a href="<c:url value='/roles'/>" class="mx-2 hover:underline">Roles</a>
+                <a href="<c:url value='/tokens'/>" class="mx-2 hover:underline">API</a>
                 <form action="<c:url value='/logout'/>" method="post" class="inline">
                     <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
                     <button type="submit" class="mx-2 hover:underline">Logout</button>

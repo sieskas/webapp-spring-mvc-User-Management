@@ -5,6 +5,10 @@ import com.example.usermanagementapp.model.User;
 import com.example.usermanagementapp.outcall.repository.RoleRepository;
 import com.example.usermanagementapp.outcall.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -14,7 +18,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
-public class UserService {
+public class UserService implements UserDetailsService {
 
     @Autowired
     private UserRepository userRepository;
@@ -93,5 +97,20 @@ public class UserService {
 
         rolesToRemove.forEach(role -> userRepository.removeRoleFromUser(userId, role.getId()));
         rolesToAdd.forEach(role -> userRepository.addRoleToUser(userId, role.getId()));
+    }
+
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        return userRepository.findByEmail(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + username));
+    }
+
+    public User getAuthenticatedUser() {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (principal instanceof User) {
+            return (User) principal;
+        } else {
+            throw new UsernameNotFoundException("User not found in security context");
+        }
     }
 }
