@@ -8,6 +8,8 @@ RUN apt-get update && apt-get install -y openjdk-8-jdk && \
 
 # Copier la webapp dans le répertoire webapps de Tomcat
 COPY target/user-management-app-1.0-SNAPSHOT.war /usr/local/tomcat/webapps/app.war
+COPY ci/server.xml /usr/local/tomcat/conf/server.xml
+COPY ssl /usr/local/tomcat/conf/ssl
 
 # Définir un argument pour le profil Spring avec une valeur par défaut
 ARG SPRING_PROFILE=qa
