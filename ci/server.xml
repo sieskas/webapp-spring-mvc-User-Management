@@ -24,7 +24,7 @@
                    maxThreads="150" SSLEnabled="true" scheme="https" secure="true"
                    clientAuth="false" sslProtocol="TLS"
                    keystoreFile="conf/ssl/keystore.jks"
-                   keystorePass="patate"
+                   keystorePass="changeit"
                    keyAlias="tomcat"
         />
 
