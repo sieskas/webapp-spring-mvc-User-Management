@@ -12,15 +12,17 @@ public class User implements UserDetails {
     private String email;
     private String password;
     private Set<Role> roles;
+    private AuthProvider authProvider;
 
     public User() {
         this.roles = new HashSet<>();
     }
 
-    public User(Long id, String email, String password) {
+    public User(Long id, String email, String password, AuthProvider authProvider) {
         this.id = id;
         this.email = email;
         this.password = password;
+        this.authProvider = authProvider;
         this.roles = new HashSet<>();
     }
 
@@ -105,5 +107,13 @@ public class User implements UserDetails {
     @Override
     public boolean isEnabled() {
         return true;
+    }
+
+    public AuthProvider getAuthProvider() {
+        return authProvider;
+    }
+
+    public void setAuthProvider(AuthProvider authProvider) {
+        this.authProvider = authProvider;
     }
 }

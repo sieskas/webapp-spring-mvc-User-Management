@@ -28,15 +28,16 @@ public class TokenController {
     private UserService userService;
 
     @PostMapping
-    public String saveToken(Token token) {
+    public String saveToken(Token token) throws Exception {
         User user = userService.getAuthenticatedUser();
        tokenService.createToken(user, token);
         return "redirect:/tokens";
     }
 
     @GetMapping
-    public String listTokens(Authentication authentication, Model model) {
-        List<Token> tokens = tokenService.getTokensByUser(authentication.getName());
+    public String listTokens(Model model) throws Exception {
+        User user = userService.getAuthenticatedUser();
+        List<Token> tokens = tokenService.getTokensByUser(user.getUsername());
         model.addAttribute("tokens", tokens);
         model.addAttribute("expirationOptions", Arrays.asList(ExpirationEnum.values()));
         return "user/token/list";

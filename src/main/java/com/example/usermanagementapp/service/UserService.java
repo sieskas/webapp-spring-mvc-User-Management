@@ -1,19 +1,28 @@
 package com.example.usermanagementapp.service;
 
+import com.example.usermanagementapp.model.AuthProvider;
 import com.example.usermanagementapp.model.Role;
 import com.example.usermanagementapp.model.User;
 import com.example.usermanagementapp.outcall.repository.RoleRepository;
 import com.example.usermanagementapp.outcall.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -32,10 +41,13 @@ public class UserService implements UserDetailsService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    public User registerNewUser(User user) {
+    public User registerNewUser(User user, AuthProvider authProvider) throws Exception {
+        if (!AuthProvider.INTERNAL.equals(authProvider)) {
+            throw new Exception();
+        }
         //add validation password size, force etc...
         user.setPassword(passwordEncoder.encode(user.getPassword()));
-
+        user.setAuthProvider(AuthProvider.INTERNAL);
         User savedUser = userRepository.save(user);
 
         Role defaultRole = roleRepository.findByName("ROLE_USER")
@@ -99,18 +111,60 @@ public class UserService implements UserDetailsService {
         rolesToAdd.forEach(role -> userRepository.addRoleToUser(userId, role.getId()));
     }
 
-    @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        return userRepository.findByEmail(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + username));
+    private User registerNewOAuth2User(String email, AuthProvider authProvider) throws Exception {
+        if (AuthProvider.INTERNAL.equals(authProvider)) {
+            throw new Exception();
+        }
+        Role defaultRole = roleRepository.findByName("ROLE_USER")
+                .orElseThrow(() -> new RuntimeException("Default role not found"));
+        User user = new User();
+        user.setEmail(email);
+        user.setPassword("");
+        user.getRoles().add(defaultRole);
+        user.setAuthProvider(authProvider);
+        User userSaved = userRepository.save(user);
+        roleRepository.addRoleToUser(userSaved, defaultRole);
+        return userSaved;
     }
 
-    public User getAuthenticatedUser() {
-        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        if (principal instanceof User) {
-            return (User) principal;
-        } else {
-            throw new UsernameNotFoundException("User not found in security context");
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        User user = userRepository.findByEmail(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + username));
+        return user ;
+    }
+
+    public User getAuthenticatedUser() throws Exception {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication.getPrincipal() instanceof DefaultOAuth2User) {
+            String email;
+            AuthProvider authProvider;
+            if (AuthProvider.GOOGLE.name().equalsIgnoreCase(((OAuth2AuthenticationToken) authentication).getAuthorizedClientRegistrationId())) {
+                email = ((DefaultOAuth2User) authentication.getPrincipal()).getAttribute("email");
+                authProvider = AuthProvider.GOOGLE;
+            } else {
+                throw new Exception();
+            }
+            User user = userRepository.findByEmail(email).orElse(null);
+            if (user == null) {
+                user = registerNewOAuth2User(email, authProvider);
+                user = saveUser(user);
+            }
+            //authenticateUser(user);
+            return user;
+        } else if (authentication.getPrincipal() instanceof User) {
+            return (User) authentication.getPrincipal();
         }
+        throw new UsernameNotFoundException("User not found in security context");
+    }
+
+    private void authenticateUser(User user) {
+        List<GrantedAuthority> authorities = user.getRoles().stream()
+                .map(role -> new SimpleGrantedAuthority(role.getName()))
+                .collect(Collectors.toList());
+
+        Authentication auth = new UsernamePasswordAuthenticationToken(user, null, authorities);
+        SecurityContextHolder.getContext().setAuthentication(auth);
     }
 }
