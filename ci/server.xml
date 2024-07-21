@@ -23,12 +23,9 @@
         <Connector port="8443" protocol="org.apache.coyote.http11.Http11NioProtocol"
                    maxThreads="150" SSLEnabled="true" scheme="https" secure="true"
                    clientAuth="false" sslProtocol="TLS"
-                   keystoreFile="conf/ssl/localhost-rsa-cert.pem"
+                   keystoreFile="conf/ssl/keystore.jks"
                    keystorePass="changeit"
                    keyAlias="tomcat"
-                   keyPass="changeit"
-                   truststoreFile="conf/ssl/localhost-rsa-key.pem"
-                   truststorePass="changeit"
         />
 
         <Engine name="Catalina" defaultHost="localhost">
