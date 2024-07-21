@@ -7,6 +7,10 @@ services:
         - SPRING_PROFILE=prod
     ports:
       - "8080:8080"
+      - "8443:8443"
+    volumes:
+      - ./ssl:/usr/local/tomcat/conf/ssl
+      - ./server.xml:/usr/local/tomcat/conf/server.xml
     depends_on:
       - mssql
 
