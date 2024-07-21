@@ -7,7 +7,7 @@ services:
         - SPRING_PROFILE=prod
     ports:
       - "8080:8080"
-      - "8443:8443"
+      - "443:443"
     depends_on:
       - mssql
 
