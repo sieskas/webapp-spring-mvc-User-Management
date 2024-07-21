@@ -8,8 +8,12 @@ RUN apt-get update && apt-get install -y openjdk-8-jdk && \
 
 # Copier la webapp dans le répertoire webapps de Tomcat
 COPY target/user-management-app-1.0-SNAPSHOT.war /usr/local/tomcat/webapps/app.war
+
+# Copier le fichier server.xml
 COPY ci/server.xml /usr/local/tomcat/conf/server.xml
-COPY ssl /usr/local/tomcat/conf/ssl
+
+# Copier le keystore
+COPY ssl/keystore.jks /usr/local/tomcat/conf/ssl/keystore.jks
 
 # Définir un argument pour le profil Spring avec une valeur par défaut
 ARG SPRING_PROFILE=qa
@@ -19,5 +23,3 @@ ENV JAVA_OPTS="-Dspring.profiles.active=${SPRING_PROFILE}"
 
 # Démarrer Tomcat avec les options Java
 CMD ["catalina.sh", "run"]
-
-
