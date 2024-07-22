@@ -1,4 +1,4 @@
-package com.example.usermanagementapp.api.v1.controller;
+package com.example.usermanagementapp.web.controller;
 
 import com.example.usermanagementapp.model.Role;
 import com.example.usermanagementapp.service.RoleService;

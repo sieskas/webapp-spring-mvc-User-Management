@@ -1,5 +1,6 @@
 package com.example.usermanagementapp.outcall.repository;
 
+import com.example.usermanagementapp.model.AuthProvider;
 import com.example.usermanagementapp.model.Role;
 import com.example.usermanagementapp.model.User;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +29,8 @@ public class UserRepository {
             user.setId(rs.getLong("id"));
             user.setEmail(rs.getString("email"));
             user.setPassword(rs.getString("password"));
+            user.setAuthProvider(AuthProvider.valueOf(rs.getString("auth_provider")));
+            user.setRoles(findRolesForUser(user.getId()));
             return user;
         }
     };
@@ -52,13 +55,13 @@ public class UserRepository {
     public User save(User user) {
         if (user.getId() == null) {
             // Insert
-            String sql = "INSERT INTO users (email, password) VALUES (?, ?); SELECT SCOPE_IDENTITY();";
-            Long generatedId = jdbcTemplate.queryForObject(sql, Long.class, user.getEmail(), user.getPassword());
+            String sql = "INSERT INTO users (email, password, auth_provider) VALUES (?, ?, ?); SELECT SCOPE_IDENTITY();";
+            Long generatedId = jdbcTemplate.queryForObject(sql, Long.class, user.getEmail(), user.getPassword(), user.getAuthProvider().name());
             user.setId(generatedId);
         } else {
             // Update
-            String sql = "UPDATE users SET email = ?, password = ? WHERE id = ?";
-            jdbcTemplate.update(sql, user.getEmail(), user.getPassword(), user.getId());
+            String sql = "UPDATE users SET email = ?, password = ?, auth_provider = ? WHERE id = ?";
+            jdbcTemplate.update(sql, user.getEmail(), user.getPassword(), user.getAuthProvider().name(), user.getId());
         }
         return user;
     }

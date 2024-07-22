@@ -1,5 +1,6 @@
-package com.example.usermanagementapp.api.v1.controller;
+package com.example.usermanagementapp.web.controller;
 
+import com.example.usermanagementapp.model.AuthProvider;
 import com.example.usermanagementapp.model.User;
 import com.example.usermanagementapp.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,8 +22,8 @@ public class RegisterController {
     }
 
     @PostMapping("/register")
-    public String registerUserAccount(User user) {
-        userService.registerNewUser(user);
+    public String registerUserAccount(User user) throws Exception {
+        userService.registerNewUser(user, AuthProvider.INTERNAL);
         return "redirect:/login?registered";
     }
 }
