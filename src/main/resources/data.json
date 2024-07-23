@@ -1,0 +1,54 @@
+{
+  "locations": [
+    {
+      "fLocationID": "AF69552E-AACD-5A1D-10A8-00111F251BF2",
+      "fDate": "2021-01-01",
+      "fTime": "00:00:00.0000000",
+      "fDir": 1,
+      "fRpt": 2,
+      "fType": 0,
+      "fCount": 1
+    },
+    {
+      "fLocationID": "AF69552E-AACD-5A1D-10A8-00111F251BF3",
+      "fDate": "2021-01-02",
+      "fTime": "01:00:00.0000000",
+      "fDir": 2,
+      "fRpt": 3,
+      "fType": 1,
+      "fCount": 5
+    },
+    {
+      "fLocationID": "BC69552E-AACD-5A1D-10A8-00111F251BF3",
+      "fDate": "2021-01-01",
+      "fTime": "01:00:00.0000000",
+      "fDir": 2,
+      "fRpt": 3,
+      "fType": 1,
+      "fCount": 2
+    }
+  ],
+  "locationUsers": [
+    {
+      "fLocationID": "ER69552E-AACD-5A1D-10A8-00111F251BF2",
+      "username": "admin",
+      "accessTime": "2021-01-01T08:30:00",
+      "role": "Admin",
+      "actionType": "Login"
+    },
+    {
+      "fLocationID": "ER69552E-AACD-5A1D-10A8-00111F251BF3",
+      "username": "user1",
+      "accessTime": "2021-01-01T09:00:00",
+      "role": "User",
+      "actionType": "View"
+    },
+    {
+      "fLocationID": "ER69552E-AACD-5A1D-10A8-00111F251BF4",
+      "username": "user2",
+      "accessTime": "2021-01-01T09:30:00",
+      "role": "User",
+      "actionType": "Edit"
+    }
+  ]
+}

@@ -2,6 +2,7 @@ CREATE TABLE users (
                        id BIGINT IDENTITY(1,1) PRIMARY KEY,
                        email VARCHAR(255) NOT NULL UNIQUE,
                        password VARCHAR(255) NOT NULL,
+                       auth_provider VARCHAR(50) NOT NULL,
                        created_at DATETIME2 DEFAULT GETDATE(),
                        updated_at DATETIME2 DEFAULT GETDATE()
 );

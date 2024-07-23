@@ -8,7 +8,7 @@
         <h1 class="text-3xl font-bold mb-4">Welcome to User Management System</h1>
 
         <sec:authorize access="isAuthenticated()">
-            <p class="mb-4">You are logged in as: <span class="font-semibold"><sec:authentication property="name" /></span></p>
+            <p class="mb-4">You are logged in as: <span class="font-semibold">${username}</span></p>
             <a href="<c:url value='/users'/>" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mr-2">Manage Users</a>
             <a href="<c:url value='/roles'/>" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">Manage Roles</a>
         </sec:authorize>

@@ -1,6 +1,7 @@
 package com.example.usermanagementapp.outcall.repository;
 
 import com.example.usermanagementapp.model.Role;
+import com.example.usermanagementapp.model.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
@@ -70,14 +71,14 @@ public class RoleRepository {
         return jdbcTemplate.query(sql, new Object[]{userId}, roleRowMapper);
     }
 
-    public void addRoleToUser(Long userId, Long roleId) {
+    public void addRoleToUser(User user, Role role) {
         String sql = "INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)";
-        jdbcTemplate.update(sql, userId, roleId);
+        jdbcTemplate.update(sql, user.getId(), role.getId());
     }
 
-    public void removeRoleFromUser(Long userId, Long roleId) {
+    public void removeRoleFromUser(User user, Role role) {
         String sql = "DELETE FROM user_roles WHERE user_id = ? AND role_id = ?";
-        jdbcTemplate.update(sql, userId, roleId);
+        jdbcTemplate.update(sql, user.getId(), role.getId());
     }
 
     public Set<Role> findRolesByIds(List<Long> ids) {

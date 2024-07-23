@@ -1,20 +1,31 @@
 package com.example.usermanagementapp.service;
 
+import com.example.usermanagementapp.model.AuthProvider;
 import com.example.usermanagementapp.model.Role;
 import com.example.usermanagementapp.model.User;
 import com.example.usermanagementapp.outcall.repository.RoleRepository;
 import com.example.usermanagementapp.outcall.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.stereotype.Service;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
-public class UserService {
+public class UserService implements UserDetailsService {
 
     @Autowired
     private UserRepository userRepository;
@@ -28,10 +39,20 @@ public class UserService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    public User registerNewUser(User user) {
+    @Autowired
+    private TokenService tokenService;
+
+    @Autowired
+    private OAuth2AuthorizedClientService authorizedClientService;
+
+
+    public User registerNewUser(User user, AuthProvider authProvider) throws Exception {
+        if (!AuthProvider.INTERNAL.equals(authProvider)) {
+            throw new Exception();
+        }
         //add validation password size, force etc...
         user.setPassword(passwordEncoder.encode(user.getPassword()));
-
+        user.setAuthProvider(AuthProvider.INTERNAL);
         User savedUser = userRepository.save(user);
 
         Role defaultRole = roleRepository.findByName("ROLE_USER")
@@ -93,5 +114,67 @@ public class UserService {
 
         rolesToRemove.forEach(role -> userRepository.removeRoleFromUser(userId, role.getId()));
         rolesToAdd.forEach(role -> userRepository.addRoleToUser(userId, role.getId()));
+    }
+
+    private User registerNewOAuth2User(String email, AuthProvider authProvider, String jwtToken) throws Exception {
+        if (AuthProvider.INTERNAL.equals(authProvider)) {
+            throw new Exception();
+        }
+        Role defaultRole = roleRepository.findByName("ROLE_USER")
+                .orElseThrow(() -> new RuntimeException("Default role not found"));
+        User user = new User();
+        user.setEmail(email);
+        user.setPassword("");
+        user.getRoles().add(defaultRole);
+        user.setAuthProvider(authProvider);
+        user.setJwt(jwtToken);
+        User userSaved = userRepository.save(user);
+        roleRepository.addRoleToUser(userSaved, defaultRole);
+        return userSaved;
+    }
+
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        User user = userRepository.findByEmail(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + username));
+        return user ;
+    }
+
+    public User getAuthenticatedUser() throws Exception {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication.getPrincipal() instanceof DefaultOAuth2User) {
+            String email;
+            AuthProvider authProvider;
+            String jwtToken;
+            if (AuthProvider.GOOGLE.name().equalsIgnoreCase(((OAuth2AuthenticationToken) authentication).getAuthorizedClientRegistrationId())) {
+                email = ((DefaultOAuth2User) authentication.getPrincipal()).getAttribute("email");
+                authProvider = AuthProvider.GOOGLE;
+                jwtToken = tokenService.getAccessToken((OAuth2AuthenticationToken) authentication); // or another method to get the token
+            } else if (AuthProvider.MICROSOFT.name().equalsIgnoreCase(((OAuth2AuthenticationToken) authentication).getAuthorizedClientRegistrationId())) {
+                email = ((DefaultOAuth2User) authentication.getPrincipal()).getAttribute("email");
+                authProvider = AuthProvider.MICROSOFT;
+                jwtToken = tokenService.getAccessToken((OAuth2AuthenticationToken) authentication); // or another method to get the token
+            } else {
+                throw new Exception();
+            }
+            User user = userRepository.findByEmail(email).orElse(null);
+            if (user == null) {
+                user = registerNewOAuth2User(email, authProvider, jwtToken);
+            }
+            return user;
+        } else if (authentication.getPrincipal() instanceof User) {
+            return (User) authentication.getPrincipal();
+        }
+        throw new UsernameNotFoundException("User not found in security context");
+    }
+
+    private void authenticateUser(User user) {
+        List<GrantedAuthority> authorities = user.getRoles().stream()
+                .map(role -> new SimpleGrantedAuthority(role.getName()))
+                .collect(Collectors.toList());
+
+        Authentication auth = new UsernamePasswordAuthenticationToken(user, null, authorities);
+        SecurityContextHolder.getContext().setAuthentication(auth);
     }
 }

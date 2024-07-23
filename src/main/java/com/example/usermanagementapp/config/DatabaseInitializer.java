@@ -29,7 +29,7 @@ public class DatabaseInitializer {
 
     @PostConstruct
     public void initialize() {
-        String masterDbUrl = dbUrl.replace("databaseName=" + dbName, "databaseName=master");
+        String masterDbUrl = dbUrl.replace("databaseName=" + dbName, "");
         try {
             Class.forName(dbDriverClassName);
             try (Connection connection = DriverManager.getConnection(masterDbUrl, dbUsername, dbPassword)) {
