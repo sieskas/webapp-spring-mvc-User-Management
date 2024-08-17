@@ -48,7 +48,7 @@ public class OAuth2WebConfig {
                 .userInfoUri(userInfoUri)
                 .userNameAttributeName(userNameAttributeName)
                 .clientName(clientName)
-                .redirectUriTemplate(redirectUri)
+                .redirectUri(redirectUri)
                 .authorizationGrantType(org.springframework.security.oauth2.core.AuthorizationGrantType.AUTHORIZATION_CODE)
                 .build();
 

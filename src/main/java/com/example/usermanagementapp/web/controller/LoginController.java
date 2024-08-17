@@ -8,8 +8,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
-import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -40,7 +38,9 @@ public class LoginController {
     }
 
     @PostMapping
-    public String authenticateUser(@RequestParam String username, @RequestParam String password, Model model) throws AuthenticationException {
+    public String authenticateUser(@RequestParam("username") String username,
+                                   @RequestParam("password") String password,
+                                   Model model) throws AuthenticationException {
         try {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(username, password));
@@ -49,7 +49,7 @@ public class LoginController {
                 throw new Exception("Invalid authentication provider for user: " + username);
             }
             SecurityContextHolder.getContext().setAuthentication(authentication);
-            return "redirect:/home";
+            return "home";
         } catch (Exception e) {
             model.addAttribute("error", "Invalid username or password");
             return "login";

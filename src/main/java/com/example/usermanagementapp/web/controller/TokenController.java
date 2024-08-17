@@ -6,7 +6,6 @@ import com.example.usermanagementapp.model.User;
 import com.example.usermanagementapp.service.TokenService;
 import com.example.usermanagementapp.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -31,7 +30,7 @@ public class TokenController {
     public String saveToken(Token token) throws Exception {
         User user = userService.getAuthenticatedUser();
        tokenService.createToken(user, token);
-        return "redirect:/tokens";
+        return "tokens";
     }
 
     @GetMapping
@@ -54,6 +53,6 @@ public class TokenController {
     @PostMapping("/{id}/delete")
     public String deleteUser(@PathVariable Long id) {
         tokenService.deleteToken(id);
-        return "redirect:/tokens";
+        return "tokens";
     }
 }

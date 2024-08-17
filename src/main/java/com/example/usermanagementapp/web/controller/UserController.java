@@ -45,7 +45,7 @@ public class UserController {
             user.setRoles(new HashSet<>());
         }
         userService.saveUser(user);
-        return "redirect:/users";
+        return "users";
     }
 
 //    @GetMapping("/{id}")
@@ -65,6 +65,6 @@ public class UserController {
     @PostMapping("/{id}/delete")
     public String deleteUser(@PathVariable Long id) {
         userService.deleteUser(id);
-        return "redirect:/users";
+        return "users";
     }
 }

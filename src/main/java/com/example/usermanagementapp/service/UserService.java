@@ -8,7 +8,6 @@ import com.example.usermanagementapp.outcall.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -20,26 +19,24 @@ import org.springframework.security.oauth2.client.authentication.OAuth2Authentic
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.stereotype.Service;
 
-import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
 public class UserService implements UserDetailsService {
 
-    @Autowired
-    private UserRepository userRepository;
+        private final UserRepository userRepository;
+        private final RoleRepository roleRepository;
+        private final RoleService roleService;
+        private final PasswordEncoder passwordEncoder;
 
-    @Autowired
-    private RoleRepository roleRepository;
-
-    @Autowired
-    private RoleService roleService;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+        public UserService(UserRepository userRepository, RoleRepository roleRepository, RoleService roleService, PasswordEncoder passwordEncoder) {
+            this.userRepository = userRepository;
+            this.roleRepository = roleRepository;
+            this.roleService = roleService;
+            this.passwordEncoder = passwordEncoder;
+        }
 
     public User registerNewUser(User user, AuthProvider authProvider) throws Exception {
         if (!AuthProvider.INTERNAL.equals(authProvider)) {
@@ -78,21 +75,23 @@ public class UserService implements UserDetailsService {
             throw new IllegalArgumentException("User must have at least one role");
         }
 
-        if (user.getId() == null || (user.getPassword() != null && !user.getPassword().isEmpty())) {
+        if (user.getId() == null) {
             user.setPassword(passwordEncoder.encode(user.getPassword()));
         } else {
             User existingUser = userRepository.findById(user.getId())
                     .orElseThrow(() -> new RuntimeException("User not found"));
-            user.setPassword(existingUser.getPassword());
+
+            if (user.getPassword() != null && !user.getPassword().isEmpty()) {
+                user.setPassword(passwordEncoder.encode(user.getPassword()));
+            } else {
+                user.setPassword(existingUser.getPassword());
+            }
         }
 
         User savedUser = userRepository.save(user);
-
         userRepository.updateUserRoles(savedUser.getId(), user.getRoles());
-
         return savedUser;
     }
-
     public void deleteUser(Long id) {
         userRepository.deleteUserRoles(id);
         userRepository.delete(id);

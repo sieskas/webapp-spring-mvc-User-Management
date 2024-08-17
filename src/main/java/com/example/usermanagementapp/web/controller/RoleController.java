@@ -29,7 +29,7 @@ public class RoleController {
     @PostMapping
     public String saveRole(@ModelAttribute Role role) {
         roleService.saveRole(role);
-        return "redirect:/roles";
+        return "roles";
     }
 
     @GetMapping("/{id}/edit")
@@ -41,6 +41,6 @@ public class RoleController {
     @PostMapping("/{id}/delete")
     public String deleteRole(@PathVariable Long id) {
         roleService.deleteRole(id);
-        return "redirect:/roles";
+        return "roles";
     }
 }

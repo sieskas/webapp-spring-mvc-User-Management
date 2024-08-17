@@ -1,7 +1,6 @@
 package com.example.usermanagementapp.model;
 
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 
 public enum ExpirationEnum {
 

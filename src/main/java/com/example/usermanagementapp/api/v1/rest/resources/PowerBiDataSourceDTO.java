@@ -1,6 +1,5 @@
 package com.example.usermanagementapp.api.v1.rest.resources;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
